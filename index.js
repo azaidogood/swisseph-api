@@ -3,32 +3,21 @@ const swe = require('swisseph');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-// Set path to ephemeris files
-swe.set_ephe_path(path.join(__dirname,'ephemeris')
-);
+swe.set_ephe_path(path.join(__dirname, 'ephemeris'));
 
-app.get('/astro', (req, res) => {
-const date = new Date('2025-12-20T00:00:00Z');
+app.get('/chart', (req, res) => {
+const date = new Date(req.query.date || new Date());
 
-swe.calc_ut(
-date.getTime() / 86400000 + 2440587.5, // Convert to Julian date
-swe.SUN,
-(flag = swe.FLG_SWIEPH),
-(result) => {
-if (result.rc !== swe.OK) {
-res.status(500).send('Calculation error');
-} else {
-res.json({
-longitude: result.longitude,
-latitude: result.latitude,
+swe.utc_to_jd(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(),
+date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), (julian) => {
+swe.calc_ut(julian.jd, swe.SUN, (result) => {
+res.json({ jd: julian.jd, sun: result });
 });
-}
-}
-);
+});
 });
 
-app.listen(PORT, () => {
-console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+console.log(`Listening on port ${port}`);
 });
