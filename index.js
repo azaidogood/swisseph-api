@@ -1,28 +1,35 @@
 const express = require('express');
 const swe = require('swisseph');
+const path = require('path');
+
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-swe.set_ephe_path(__dirname + '/ephemeris');
-
-app.get('/astro', (req, res) => {
-const { date } = req.query;
-if (!date) return res.status(400).json({ error: 'Missing date' });
-
-const [year, month, day] = date.split('-').map(Number);
-const jd = swe.swe_julday(year, month, day, 0, swe.GREG_CAL);
-
-const planets = [swe.SE_SUN, swe.SE_MOON, swe.SE_MERCURY];
-const results = {};
-
-for (const planet of planets) {
-const calc = swe.swe_calc_ut(jd, planet);
-results[swe.get_planet_name(planet)] = {
-longitude: calc.longitude
-};
-}
-
-res.json({ julianDay: jd, planets: results });
+// Set path to ephemeris files
+swe.initialize({
+eph_path: path.join(__dirname, 'ephemeris')
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Running on ${PORT}`));
+app.get('/astro', (req, res) => {
+const date = new Date('2025-12-20T00:00:00Z');
+
+swe.calc_ut(
+date.getTime() / 86400000 + 2440587.5, // Convert to Julian date
+swe.SUN,
+(flag = swe.FLG_SWIEPH),
+(result) => {
+if (result.rc !== swe.OK) {
+res.status(500).send('Calculation error');
+} else {
+res.json({
+longitude: result.longitude,
+latitude: result.latitude,
+});
+}
+}
+);
+});
+
+app.listen(PORT, () => {
+console.log(`Server running on port ${PORT}`);
+});
