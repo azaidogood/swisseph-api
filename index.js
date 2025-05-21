@@ -1,24 +1,24 @@
 const express = require('express');
-const path = require('path');
-const swe = require('swisseph');
-
 const app = express();
-const port = process.env.PORT || 3000;
+const swe = require('swisseph'); // assuming you installed this
+const path = require('path');
 
-const ephePath = path.join(__dirname, 'ephemeris');
-swe.swe_set_ephe_path(ephePath);
+// Set Swiss Ephemeris data path (optional if not using ephemeris files)
+swe.set_ephe_path(path.join(__dirname, 'ephemeris'));
 
-app.get('/chart', (req, res) => {
-const dateStr = req.query.date || new Date().toISOString().split('T')[0];
-const [year, month, day] = dateStr.split('-').map(Number);
-
-swe.swe_utc_to_jd(year, month, day, 12, 0, 0, swe.SE_GREG_CAL, (julian) => {
-swe.swe_calc_ut(julian.jd, swe.SE_SUN, (result) => {
-res.json({ jd: julian.jd, sun: result });
-});
-});
+// Define a root route
+app.get('/', (req, res) => {
+res.json({ message: 'Swiss Ephemeris API is running.' });
 });
 
-app.listen(port, () => {
-console.log(`Server running on port ${port}`);
+// Example endpoint: calculate Julian day for a date
+app.get('/julian', (req, res) => {
+const jd = swe.julday(2025, 5, 21, 0); // May 21, 2025, at 0h UTC
+res.json({ julianDay: jd });
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+console.log(`Server is listening on port ${PORT}`);
 });
