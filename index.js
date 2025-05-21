@@ -6,9 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Set path to ephemeris files
-swe.initialize({
-eph_path: path.join(__dirname, 'ephemeris')
-});
+swe.set_ephe_path(path.join(__dirname,'ephemeris')
+);
 
 app.get('/astro', (req, res) => {
 const date = new Date('2025-12-20T00:00:00Z');
