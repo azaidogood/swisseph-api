@@ -1,24 +1,18 @@
 const express = require('express');
-const app = express();
-const swe = require('swisseph'); // assuming you installed this
+const swe = require('swisseph');
 const path = require('path');
 
-// Set Swiss Ephemeris data path (optional if not using ephemeris files)
-swe.set_ephe_path(path.join(__dirname, 'ephemeris'));
-
-// Define a root route
-app.get('/', (req, res) => {
-res.json({ message: 'Swiss Ephemeris API is running.' });
-});
-
-// Example endpoint: calculate Julian day for a date
-app.get('/julian', (req, res) => {
-const jd = swe.julday(2025, 5, 21, 0); // May 21, 2025, at 0h UTC
-res.json({ julianDay: jd });
-});
-
-// Start server
+const app = express();
 const PORT = process.env.PORT || 3000;
+
+swe.swe_set_ephe_path(path.join(__dirname, 'ephemeris'));
+
+app.get('/', (req, res) => {
+  const jd = swe.swe_julday(2025, 5, 21, 0, swe.SE_GREG_CAL);
+  const result = swe.swe_calc_ut(jd, swe.SE_SUN, 0);
+  res.json(result);
+});
+
 app.listen(PORT, () => {
-console.log(`Server is listening on port ${PORT}`);
+  console.log(`Swisseph API running on port ${PORT}`);
 });
