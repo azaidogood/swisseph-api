@@ -1,23 +1,24 @@
 const express = require('express');
-const swe = require('swisseph');
 const path = require('path');
+const swe = require('swisseph');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-swe.set_ephe_path(path.join(__dirname, 'ephemeris'));
+const ephePath = path.join(__dirname, 'ephemeris');
+swe.swe_set_ephe_path(ephePath);
 
 app.get('/chart', (req, res) => {
-const date = new Date(req.query.date || new Date());
+const dateStr = req.query.date || new Date().toISOString().split('T')[0];
+const [year, month, day] = dateStr.split('-').map(Number);
 
-swe.utc_to_jd(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(),
-date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), (julian) => {
-swe.calc_ut(julian.jd, swe.SUN, (result) => {
+swe.swe_utc_to_jd(year, month, day, 12, 0, 0, swe.SE_GREG_CAL, (julian) => {
+swe.swe_calc_ut(julian.jd, swe.SE_SUN, (result) => {
 res.json({ jd: julian.jd, sun: result });
 });
 });
 });
 
 app.listen(port, () => {
-console.log(`Listening on port ${port}`);
+console.log(`Server running on port ${port}`);
 });
